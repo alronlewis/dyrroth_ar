@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>My AR Artwork</title>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    #start {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      color: white;
+      text-align: center;
+      padding: 24px;
+    }
+
+    button {
+      padding: 15px 25px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    #start button {
+      background: white;
+      color: black;
+      margin-top: 20px;
+    }
+
+    #status {
+      position: fixed;
+      top: 15px;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      text-align: center;
+      color: white;
+      font-size: 14px;
+      pointer-events: none;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
+</head>
+
+<body>
+
+  <div id="start">
+    <div>
+      <h2>Bring this artwork to life</h2>
+      <p>Scan your drawing and discover the hidden video.</p>
+      <button id="startButton">Start AR Experience</button>
+    </div>
+  </div>
+
+  <div id="status">Point your camera at the artwork</div>
+
+  <script>
+    const startButton = document.getElementById("startButton");
+    const startScreen = document.getElementById("start");
+    const statusText = document.getElementById("status");
+
+    startButton.addEventListener("click", async () => {
+
+      startButton.disabled = true;
+      startButton.textContent = "Loading AR...";
+
+      try {
+
+        const mindarThree = new
+          window.MINDAR.IMAGE.MindARThree({
+            container: document.body,
+            imageTargetSrc: "./targets.mind"
+          });
+
+        const {
+          renderer,
+          scene,
+          camera
+        } = mindarThree;
+
+        const anchor = mindarThree.addAnchor(0);
+
+        const video = document.createElement("video");
+
+        video.src = "./video.mp4";
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.crossOrigin = "anonymous";
+
+        await video.play();
+
+        const videoTexture =
+          new THREE.VideoTexture(video);
+
+        videoTexture.colorSpace =
+          THREE.SRGBColorSpace;
+
+        const videoMaterial = new THREE.MeshBasicMaterial({
+          map: videoTexture,
+          side: THREE.DoubleSide
+        });
+
+        const videoGeometry =
+          new THREE.PlaneGeometry(1, 0.5625);
+
+        const videoPlane = new THREE.Mesh(
+          videoGeometry,
+          videoMaterial
+        );
+
+        // Place the video slightly above the artwork.
+        videoPlane.position.set(0, 0, 0.01);
+
+        anchor.group.add(videoPlane);
+
+        anchor.onTargetFound = () => {
+          statusText.textContent = "Artwork recognized!";
+          video.play();
+        };
+
+        anchor.onTargetLost = () => {
+          statusText.textContent =
+            "Point your camera at the artwork";
+        };
+
+        await mindarThree.start();
+
+        startScreen.style.display = "none";
+
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+
+      } catch (error) {
+
+        console.error(error);
+
+        statusText.textContent =
+          "Unable to start AR. Check camera permission.";
+
+        startButton.disabled = false;
+        startButton.textContent = "Try Again";
+
+      }
+
+    });
+  </script>
+
+</body>
+</html>
