@@ -6,14 +6,15 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
 
-  <title>My AR Artwork</title>
+  <title>Alron Lewis | AR Artwork</title>
 
   <style>
     body {
       margin: 0;
-      overflow: hidden;
       background: #000;
+      color: white;
       font-family: Arial, sans-serif;
+      overflow: hidden;
     }
 
     #start {
@@ -23,36 +24,37 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #111;
-      color: white;
       text-align: center;
+      background: #111;
       padding: 24px;
     }
 
-    button {
-      padding: 15px 25px;
-      border: 0;
-      border-radius: 10px;
-      font-size: 17px;
-      cursor: pointer;
-    }
-
     #start button {
+      padding: 15px 28px;
+      border: none;
+      border-radius: 12px;
       background: white;
       color: black;
+      font-size: 17px;
       margin-top: 20px;
     }
 
     #status {
       position: fixed;
-      top: 15px;
+      top: 20px;
       left: 0;
       right: 0;
       z-index: 5;
       text-align: center;
-      color: white;
-      font-size: 14px;
+      font-size: 15px;
+      padding: 10px;
       pointer-events: none;
+    }
+
+    #error {
+      color: #ff7777;
+      font-size: 14px;
+      margin-top: 15px;
     }
   </style>
 
@@ -66,29 +68,58 @@
   <div id="start">
     <div>
       <h2>Bring this artwork to life</h2>
-      <p>Scan your drawing and discover the hidden video.</p>
-      <button id="startButton">Start AR Experience</button>
+
+      <p>
+        Point your camera at your Dyrroth drawing
+        and discover the AR experience.
+      </p>
+
+      <button id="startButton">
+        Start AR Camera
+      </button>
+
+      <div id="error"></div>
     </div>
   </div>
 
-  <div id="status">Point your camera at the artwork</div>
+  <div id="status">
+    Camera not started
+  </div>
 
   <script>
-    const startButton = document.getElementById("startButton");
-    const startScreen = document.getElementById("start");
-    const statusText = document.getElementById("status");
+    const startScreen =
+      document.getElementById("start");
+
+    const startButton =
+      document.getElementById("startButton");
+
+    const statusText =
+      document.getElementById("status");
+
+    const errorText =
+      document.getElementById("error");
 
     startButton.addEventListener("click", async () => {
 
       startButton.disabled = true;
-      startButton.textContent = "Loading AR...";
+      startButton.textContent = "Starting camera...";
+      errorText.textContent = "";
 
       try {
 
-        const mindarThree = new
-          window.MINDAR.IMAGE.MindARThree({
+        const mindarThree =
+          new window.MINDAR.IMAGE.MindARThree({
+
             container: document.body,
-            imageTargetSrc: "./targets.mind"
+
+            imageTargetSrc: "./targets.mind",
+
+            maxTrack: 1,
+
+            uiLoading: "no",
+            uiScanning: "no",
+            uiError: "no"
+
           });
 
         const {
@@ -97,69 +128,73 @@
           camera
         } = mindarThree;
 
-        const anchor = mindarThree.addAnchor(0);
+        const anchor =
+          mindarThree.addAnchor(0);
 
-        const video = document.createElement("video");
+        // Create a simple visual indicator.
+        const geometry =
+          new THREE.RingGeometry(0.12, 0.15, 32);
 
-        video.src = "./video.mp4";
-        video.loop = true;
-        video.muted = true;
-        video.playsInline = true;
-        video.crossOrigin = "anonymous";
+        const material =
+          new THREE.MeshBasicMaterial({
+            color: 0x00ff88,
+            side: THREE.DoubleSide
+          });
 
-        await video.play();
+        const ring =
+          new THREE.Mesh(geometry, material);
 
-        const videoTexture =
-          new THREE.VideoTexture(video);
+        ring.position.set(0, 0, 0.02);
 
-        videoTexture.colorSpace =
-          THREE.SRGBColorSpace;
-
-        const videoMaterial = new THREE.MeshBasicMaterial({
-          map: videoTexture,
-          side: THREE.DoubleSide
-        });
-
-        const videoGeometry =
-          new THREE.PlaneGeometry(1, 0.5625);
-
-        const videoPlane = new THREE.Mesh(
-          videoGeometry,
-          videoMaterial
-        );
-
-        // Place the video slightly above the artwork.
-        videoPlane.position.set(0, 0, 0.01);
-
-        anchor.group.add(videoPlane);
+        anchor.group.add(ring);
 
         anchor.onTargetFound = () => {
-          statusText.textContent = "Artwork recognized!";
-          video.play();
+
+          statusText.textContent =
+            "Artwork recognized! AR is working.";
+
+          ring.visible = true;
+
         };
 
         anchor.onTargetLost = () => {
+
           statusText.textContent =
-            "Point your camera at the artwork";
+            "Looking for your artwork...";
+
+          ring.visible = false;
+
         };
+
+        ring.visible = false;
+
+        statusText.textContent =
+          "Loading AR engine...";
 
         await mindarThree.start();
 
         startScreen.style.display = "none";
 
+        statusText.textContent =
+          "Point your camera at your drawing";
+
         renderer.setAnimationLoop(() => {
+
           renderer.render(scene, camera);
+
         });
 
       } catch (error) {
 
         console.error(error);
 
-        statusText.textContent =
-          "Unable to start AR. Check camera permission.";
+        errorText.textContent =
+          error.message || "Unable to start AR.";
 
         startButton.disabled = false;
-        startButton.textContent = "Try Again";
+
+        startButton.textContent =
+          "Try Again";
 
       }
 
