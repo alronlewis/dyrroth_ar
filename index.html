@@ -3,107 +3,157 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080808">
-  <title>Alron Lewis | Dyrroth AR</title>
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="Bring Alron Lewis' Dyrroth artwork to life with an interactive augmented reality experience.">
+  <title>Dyrroth AR Experience | Alron Lewis</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #080808; color: #fff; font-family: Arial, sans-serif; }
-    #start { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 26px; background: radial-gradient(circle at 50% 35%, #252525, #080808 70%); text-align: center; }
-    .panel { width: min(100%, 420px); }
-    h1 { font-size: 27px; margin: 0 0 12px; }
-    p { color: #c7c7c7; line-height: 1.55; margin: 0 auto 22px; }
-    button { border: 0; border-radius: 999px; padding: 15px 26px; background: #fff; color: #111; font-size: 16px; font-weight: 700; cursor: pointer; }
-    button:disabled { opacity: .65; }
-    #error { color: #ff8d8d; font-size: 14px; line-height: 1.5; margin-top: 16px; overflow-wrap: anywhere; }
-    #status { position: fixed; z-index: 5; top: max(14px, env(safe-area-inset-top)); left: 12px; right: 12px; padding: 11px 14px; border-radius: 12px; background: #0009; color: white; text-align: center; font-size: 14px; pointer-events: none; }
-    #status:empty { display: none; }
+    :root{color-scheme:dark;--bg:#09090b;--panel:#151519;--muted:#a6a6b0;--line:#ffffff18;--accent:#c6ff45}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    body{min-height:100svh;overflow-x:hidden}
+    button{font:inherit}
+    .page{min-height:100svh;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% 0%,#25252b 0%,#111115 38%,var(--bg) 75%)}
+    header{width:min(1100px,100%);margin:auto;padding:24px 22px;display:flex;align-items:center;justify-content:space-between}
+    .brand{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:800}
+    .brand span{color:var(--accent)}
+    .tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:8px 11px}
+    main{width:min(1100px,100%);margin:auto;padding:24px 22px 64px;display:grid;grid-template-columns:1fr .9fr;gap:clamp(28px,6vw,76px);align-items:center;flex:1}
+    .eyebrow{color:var(--accent);font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:800;margin:0 0 18px}
+    h1{font-size:clamp(42px,7vw,82px);line-height:.96;letter-spacing:-.065em;margin:0 0 22px;font-weight:850}
+    h1 em{font-style:normal;color:var(--accent)}
+    .intro{font-size:16px;line-height:1.7;color:#b9b9c2;max-width:460px;margin:0 0 30px}
+    .actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .start{border:0;border-radius:999px;background:var(--accent);color:#10110a;padding:16px 23px;font-weight:850;cursor:pointer;display:inline-flex;gap:10px;align-items:center;box-shadow:0 8px 35px #c6ff4520}
+    .start:disabled{opacity:.65;cursor:wait}
+    .hint{font-size:12px;color:var(--muted)}
+    .art-card{position:relative;min-height:390px;aspect-ratio:4/5;border:1px solid var(--line);border-radius:28px;overflow:hidden;background:linear-gradient(145deg,#27272d,#101014);display:grid;place-items:center;box-shadow:0 30px 100px #0008}
+    .art-card:before{content:"";position:absolute;inset:12px;border:1px solid #ffffff12;border-radius:20px;pointer-events:none}
+    .art-placeholder{text-align:center;padding:32px;color:#777782}
+    .art-placeholder .symbol{font-size:64px;line-height:1;margin-bottom:20px;color:#55555e}
+    .art-placeholder strong{display:block;color:#d9d9df;font-size:14px;margin-bottom:8px}
+    .art-placeholder small{font-size:12px}
+    .corner{position:absolute;bottom:26px;left:28px;right:28px;display:flex;justify-content:space-between;align-items:center;color:#a5a5ad;font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+    footer{width:min(1100px,100%);margin:auto;padding:18px 22px 26px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;color:#777782;font-size:11px}
+    #ar-ui{display:none;position:fixed;inset:0;z-index:20;background:#000}
+    #ar-ui.active{display:block}
+    #ar-container{position:absolute;inset:0}
+    #status{position:absolute;z-index:2;top:max(18px,env(safe-area-inset-top));left:16px;right:16px;text-align:center;background:#08080bd9;border:1px solid #ffffff20;border-radius:14px;padding:12px 16px;font-size:13px;backdrop-filter:blur(12px)}
+    #stop{position:absolute;z-index:3;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);border:1px solid #ffffff30;background:#111d;color:#fff;border-radius:999px;padding:13px 20px}
+    #error{color:#ff9b9b;font-size:13px;line-height:1.5;margin-top:18px;max-width:440px}
+    @media(max-width:760px){header{padding:20px 18px}main{grid-template-columns:1fr;padding:34px 22px 44px;gap:34px}.hero{text-align:center}.intro{margin-left:auto;margin-right:auto}.actions{justify-content:center}.art-card{min-height:280px;max-height:420px;aspect-ratio:1.15}.corner{bottom:22px}footer{padding:16px 18px;flex-wrap:wrap}}
   </style>
-  <!-- MindAR 1.2.5 expects the classic global THREE build. -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"></script>
 </head>
 <body>
-  <main id="start">
-    <div class="panel">
-      <h1>Bring this artwork to life</h1>
-      <p>Allow camera access, then point your phone at the Dyrroth drawing.</p>
-      <button id="startButton" type="button">Start AR Camera</button>
-      <div id="error" role="alert"></div>
-    </div>
-  </main>
-  <div id="status" aria-live="polite"></div>
+  <div class="page" id="home">
+    <header><div class="brand">ALRON <span>LEWIS</span></div><div class="tag">A small AR experiment</div></header>
+    <main>
+      <section class="hero">
+        <p class="eyebrow">Artwork · Augmented reality</p>
+        <h1>Art goes<br><em>beyond</em><br>the frame.</h1>
+        <p class="intro">A drawing is only the beginning. Scan the Dyrroth artwork with your camera and watch it come to life in augmented reality.</p>
+        <div class="actions"><button class="start" id="startButton"><span>✦</span> Experience AR</button><span class="hint">Best experienced on your phone</span></div>
+        <div id="error" role="alert"></div>
+      </section>
+      <section class="art-card" aria-label="Artwork preview placeholder">
+        <div class="art-placeholder"><div class="symbol">✧</div><strong>YOUR ARTWORK COMES ALIVE</strong><small>Point your camera at the Dyrroth drawing</small></div>
+        <div class="corner"><span>ZERO TO INFINITE</span><span>01 / AR</span></div>
+      </section>
+    </main>
+    <footer><span>© 2026 Alron Lewis</span><span>Made for art that deserves to move.</span></footer>
+  </div>
+  <section id="ar-ui" aria-live="polite">
+    <div id="ar-container"></div>
+    <div id="status">Preparing your AR experience…</div>
+    <button id="stop" type="button">Exit AR</button>
+  </section>
+  <video id="ar-video" src="./video.mp4" playsinline muted loop preload="auto" style="display:none"></video>
   <script>
-    const startScreen = document.getElementById('start');
-    const startButton = document.getElementById('startButton');
-    const statusText = document.getElementById('status');
-    const errorText = document.getElementById('error');
-    let arStarted = false;
+    const startButton=document.getElementById('startButton');
+    const errorBox=document.getElementById('error');
+    const arUI=document.getElementById('ar-ui');
+    const statusBox=document.getElementById('status');
+    const video=document.getElementById('ar-video');
+    let mindar=null,renderer=null,started=false,videoMesh=null;
 
-    startButton.addEventListener('click', async () => {
-      if (arStarted) return;
-      startButton.disabled = true;
-      startButton.textContent = 'Starting camera…';
-      errorText.textContent = '';
-      statusText.textContent = 'Checking AR engine…';
+    function explainError(err){
+      if(!window.isSecureContext)return 'Camera access needs a secure HTTPS website. Open the GitHub Pages https:// link.';
+      if(err?.name==='NotAllowedError'||err?.name==='PermissionDeniedError')return 'Camera permission was blocked. In your browser site settings, allow Camera for this website, then try again.';
+      if(err?.name==='NotFoundError')return 'No camera was found on this device.';
+      if(err?.name==='NotReadableError')return 'Your camera may be in use by another app. Close it and try again.';
+      if(!window.THREE)return 'The 3D library did not load. Check your internet connection and reload.';
+      if(!window.MINDAR?.IMAGE)return 'The AR library did not load. Check your internet connection and reload.';
+      return err?.message||'The AR camera could not start. Please reload and try again.';
+    }
 
-      try {
-        if (!window.isSecureContext) {
-          throw new Error('Camera access requires HTTPS. Open this page using its https://github.io address.');
-        }
-        if (!window.THREE) throw new Error('The 3D library did not load. Check your internet connection and reload this page.');
-        if (!window.MINDAR || !window.MINDAR.IMAGE) throw new Error('The AR library did not load. Check your internet connection and reload this page.');
+    async function startAR(){
+      if(started)return;
+      startButton.disabled=true;startButton.textContent='Starting camera…';errorBox.textContent='';
+      arUI.classList.add('active');statusBox.textContent='Requesting camera access…';
+      try{
+        if(!window.isSecureContext)throw new Error('HTTPS is required.');
+        if(!window.THREE)throw new Error('The 3D library did not load.');
+        if(!window.MINDAR?.IMAGE)throw new Error('The AR library did not load.');
 
-        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-          container: document.body,
-          imageTargetSrc: './targets.mind',
-          maxTrack: 1,
-          uiLoading: 'no',
-          uiScanning: 'no',
-          uiError: 'no'
+        mindar=new window.MINDAR.IMAGE.MindARThree({
+          container:document.getElementById('ar-container'),
+          imageTargetSrc:'./targets.mind',
+          maxTrack:1,
+          uiLoading:'no',
+          uiScanning:'no',
+          uiError:'no'
         });
+        const {renderer:arRenderer,scene,camera}=mindar;
+        renderer=arRenderer;
+        const anchor=mindar.addAnchor(0);
 
-        const { renderer, scene, camera } = mindarThree;
-        const anchor = mindarThree.addAnchor(0);
+        video.muted=true;
+        video.loop=true;
+        const texture=new THREE.VideoTexture(video);
+        texture.colorSpace=THREE.SRGBColorSpace;
+        const material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
+        videoMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,9/16),material);
+        videoMesh.position.z=0.015;
+        videoMesh.visible=false;
+        anchor.group.add(videoMesh);
 
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(0.12, 0.15, 48),
-          new THREE.MeshBasicMaterial({ color: 0x00ff99, side: THREE.DoubleSide })
-        );
-        ring.position.z = 0.02;
-        ring.visible = false;
-        anchor.group.add(ring);
-
-        anchor.onTargetFound = () => {
-          statusText.textContent = 'Artwork recognised!';
-          ring.visible = true;
+        anchor.onTargetFound=()=>{
+          statusBox.textContent='Artwork found · Enjoy the moment';
+          videoMesh.visible=true;
+          video.play().catch(()=>{statusBox.textContent='Tap the screen once to start the video';});
         };
-        anchor.onTargetLost = () => {
-          statusText.textContent = 'Looking for your drawing…';
-          ring.visible = false;
+        anchor.onTargetLost=()=>{
+          statusBox.textContent='Looking for your artwork…';
+          video.pause();video.currentTime=0;
+          videoMesh.visible=false;
         };
-
-        statusText.textContent = 'Requesting camera permission…';
-        await mindarThree.start();
-        arStarted = true;
-        startScreen.style.display = 'none';
-        statusText.textContent = 'Point your camera at the drawing';
-        renderer.setAnimationLoop(() => renderer.render(scene, camera));
-      } catch (err) {
-        console.error('AR startup failed:', err);
-        statusText.textContent = '';
-        let message = err && err.message ? err.message : 'Could not start the AR camera.';
-        if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
-          message = 'Camera permission was blocked. Allow camera access for this site in your browser settings, then tap Try Again.';
-        } else if (err && err.name === 'NotFoundError') {
-          message = 'No camera was found on this device.';
-        } else if (err && err.name === 'NotReadableError') {
-          message = 'The camera is busy in another app. Close other camera apps and try again.';
-        }
-        errorText.textContent = message;
-        startButton.disabled = false;
-        startButton.textContent = 'Try Again';
+        statusBox.textContent='Starting camera…';
+        await mindar.start();
+        started=true;
+        renderer.setAnimationLoop(()=>renderer.render(scene,camera));
+        statusBox.textContent='Point your camera at the Dyrroth artwork';
+        if(video.error)statusBox.textContent='Camera ready · Add video.mp4 to the website to show your animation';
+      }catch(err){
+        console.error(err);
+        statusBox.textContent=explainError(err);
+        const message=explainError(err);
+        await stopAR();
+        errorBox.textContent=message;
+        startButton.disabled=false;startButton.textContent='Try Again';
       }
-    });
+    }
+
+    async function stopAR(){
+      if(renderer)renderer.setAnimationLoop(null);
+      if(mindar){try{await mindar.stop();}catch(e){console.warn(e);}mindar=null;}
+      renderer=null;started=false;video.pause();video.currentTime=0;
+      arUI.classList.remove('active');
+    }
+    startButton.addEventListener('click',startAR);
+    document.getElementById('stop').addEventListener('click',async()=>{await stopAR();startButton.disabled=false;startButton.textContent='Experience AR';});
+    video.addEventListener('error',()=>{if(started)statusBox.textContent='AR is ready · Upload a video named video.mp4 to activate the animation';});
   </script>
 </body>
 </html>
